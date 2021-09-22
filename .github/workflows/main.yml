@@ -1,10 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
 name: Public
-
-env:
-  MINGW_VERSION:  "win32_mingw73"
-  MINGW_PATH:     "mingw73_32"
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
@@ -27,6 +23,9 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+
+      - name: Insatll MSVC
+        uses: microsoft/setup-msbuild@v1.0.2
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
