@@ -5,7 +5,7 @@
 
 # Warnings valid for both C and C++
 CWARNSCPP= \
-	-Wfatal-errors \
+	-fmax-errors=5 \
 	-Wextra \
 	-Wshadow \
 	-Wsign-compare \
@@ -14,6 +14,8 @@ CWARNSCPP= \
 	-Wredundant-decls \
 	-Wdisabled-optimization \
 	-Wdouble-promotion \
+	-Wlogical-op \
+	-Wno-aggressive-loop-optimizations \
         # the next warnings might be useful sometimes,
 	# but usually they generate too much noise
 	# -Werror \
@@ -24,13 +26,6 @@ CWARNSCPP= \
 	# -Wformat=2 \
 	# -Wcast-qual \
 
-
-# Warnings for gcc, not valid for clang
-CWARNGCC= \
-	-Wlogical-op \
-	-Wno-aggressive-loop-optimizations \
-
-
 # The next warnings are neither valid nor needed for C++
 CWARNSC= -Wdeclaration-after-statement \
 	-Wmissing-prototypes \
@@ -40,20 +35,12 @@ CWARNSC= -Wdeclaration-after-statement \
 	-Wold-style-definition \
 
 
-CWARNS= $(CWARNSCPP) $(CWARNSC) $(CWARNGCC)
+CWARNS= $(CWARNSCPP) $(CWARNSC)
 
-# Some useful compiler options for internal tests:
-# -DLUAI_ASSERT turns on all assertions inside Lua.
-# -DHARDSTACKTESTS forces a reallocation of the stack at every point where
-# the stack can be reallocated.
-# -DHARDMEMTESTS forces a full collection at all points where the collector
-# can run.
-# -DEMERGENCYGCTESTS forces an emergency collection at every single allocation.
-# -DEXTERNMEMCHECK removes internal consistency checking of blocks being
-# deallocated (useful when an external tool like valgrind does the check).
-# -DMAXINDEXRK=k limits range of constants in RK instruction operands.
-# -DLUA_COMPAT_5_3
 
+# -DEXTERNMEMCHECK -DHARDSTACKTESTS -DHARDMEMTESTS -DTRACEMEM='"tempmem"'
+# -DMAXINDEXRK=1 -DLUA_COMPAT_5_3
+# -g -DLUA_USER_H='"ltests.h"'
 # -pg -malign-double
 # -DLUA_USE_CTYPE -DLUA_USE_APICHECK
 # ('-ftrapv' for runtime checks of integer overflows)
@@ -94,9 +81,11 @@ LIB_O=	lbaselib.o ldblib.o liolib.o lmathlib.o loslib.o ltablib.o lstrlib.o \
 LUA_T=	lua
 LUA_O=	lua.o
 
+# LUAC_T=	luac
+# LUAC_O=	luac.o print.o
 
-ALL_T= $(CORE_T) $(LUA_T)
-ALL_O= $(CORE_O) $(LUA_O) $(AUX_O) $(LIB_O)
+ALL_T= $(CORE_T) $(LUA_T) $(LUAC_T)
+ALL_O= $(CORE_O) $(LUA_O) $(LUAC_O) $(AUX_O) $(LIB_O)
 ALL_A= $(CORE_T)
 
 all:	$(ALL_T)
@@ -112,6 +101,18 @@ $(CORE_T): $(CORE_O) $(AUX_O) $(LIB_O)
 
 $(LUA_T): $(LUA_O) $(CORE_T)
 	$(CC) -o $@ $(MYLDFLAGS) $(LUA_O) $(CORE_T) $(LIBS) $(MYLIBS) $(DL)
+
+$(LUAC_T): $(LUAC_O) $(CORE_T)
+	$(CC) -o $@ $(MYLDFLAGS) $(LUAC_O) $(CORE_T) $(LIBS) $(MYLIBS)
+
+llex.o:
+	$(CC) $(CFLAGS) -Os -c llex.c
+
+lparser.o:
+	$(CC) $(CFLAGS) -Os -c lparser.c
+
+lcode.o:
+	$(CC) $(CFLAGS) -Os -c lcode.c
 
 
 clean:
