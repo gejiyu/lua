@@ -2,6 +2,9 @@
 
 name: Public
 
+env:
+  MINGW_VERSION:  "win32_mingw73"
+  MINGW_PATH:     "mingw73_32"
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
@@ -25,8 +28,13 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Insatll MSVC
-        uses: microsoft/setup-msbuild@v1.0.2
+      - name: Install correct version of mingw
+        run: |
+          choco uninstall mingw --force
+          choco uninstall strawberryperl --force
+      - uses: numworks/setup-msys2@v1
+        with:
+          msystem: MINGW32
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
